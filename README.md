@@ -14,7 +14,7 @@
 | Flash | 128MB NAND |
 | 无线 | AX1800，2.4G + 5G 双频 Wi-Fi 6 |
 | 有线 | 4 × 千兆 LAN + 1 × 千兆 WAN |
-| USB | USB 3.0 × 1 |
+| USB | USB 2.0 × 1 |
 
 ---
 
