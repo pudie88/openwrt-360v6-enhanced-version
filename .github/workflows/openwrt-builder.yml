@@ -49,12 +49,13 @@ jobs:
           echo "OPENWRT_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
           echo "BUILD_DATE=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
 
-      - name: 📦 Install Custom Packages
+            - name: 📦 Install Custom Packages
         run: |
           cd openwrt
-          rm -rf package/luci-theme-argon package/homeproxy
+          rm -rf package/luci-theme-argon package/homeproxy package/luci-app-fileassistant
           git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
           git clone --depth 1 https://github.com/immortalwrt/homeproxy.git package/homeproxy
+          git clone --depth 1 https://github.com/sirpdboy/luci-app-fileassistant.git package/luci-app-fileassistant
 
       - name: 🔄 Update & Install Feeds
         run: |
