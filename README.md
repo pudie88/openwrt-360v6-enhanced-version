@@ -1,7 +1,5 @@
 # 📦 ImmortalWrt 360 V6 增强版 (Enhanced)
 
-# OpenWrt 固件 - 360 V6 (Qualcomm IPQ60xx)
-
 基于 ImmortalWrt master 分支自动编译，专为 360 V6 路由器定制。
 
 ---
