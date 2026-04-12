@@ -66,7 +66,6 @@ jobs:
         run: |
           echo "=== ipq60xx.mk 全部设备定义 ==="
           grep "define Device\|TARGET_DEVICES" openwrt/target/linux/qualcommax/image/ipq60xx.mk
-          
           echo "=== 所有 DTS 文件 ==="
           find openwrt/target/linux/qualcommax/files -name "*.dts" | sort
 
@@ -82,8 +81,7 @@ jobs:
             echo "✅ 已移除 sing-box-tiny"
           fi
 
-          # 2. 检查 luci-app-fileassistant 是否在 feeds 中存在
-          #    immortalwrt feeds/luci 包含该包，找不到时给出警告但不中止
+          # 2. 检查 luci-app-fileassistant
           if find feeds -name "luci-app-fileassistant" -maxdepth 4 -type d | grep -q .; then
             echo "✅ luci-app-fileassistant 已在 feeds 中找到"
           else
@@ -114,9 +112,41 @@ jobs:
             exit 1
           fi
 
-          # 7. 打印新增包的最终状态，方便 CI 日志核查
+          # 7. ===== 预置 LAN IP 为 192.168.2.1 =====
+          # 通过 files/ 目录覆盖固件默认网络配置
+          mkdir -p files/etc/config
+          cat > files/etc/config/network << 'NETWORK_EOF'
+          config interface 'loopback'
+                  option device 'lo'
+                  option proto 'static'
+                  option ipaddr '127.0.0.1'
+                  option netmask '255.0.0.0'
+
+          config globals 'globals'
+                  option ula_prefix 'auto'
+
+          config interface 'lan'
+                  option device 'br-lan'
+                  option proto 'static'
+                  option ipaddr '192.168.2.1'
+                  option netmask '255.255.255.0'
+                  option ip6assign '60'
+
+          config interface 'wan'
+                  option device 'eth1'
+                  option proto 'dhcp'
+
+          config interface 'wan6'
+                  option device 'eth1'
+                  option proto 'dhcpv6'
+          NETWORK_EOF
+          echo "✅ LAN IP 已预置为 192.168.2.1"
+
+          # 8. 打印新增包的最终状态
           echo "=== 新增包配置确认 ==="
-          grep -E "luci-app-opkg|luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|luci-app-adguardhome|adguardhome" .config || true
+          grep -E "luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|luci-app-adguardhome|adguardhome" .config || true
+          echo "=== files/ 目录预置文件 ==="
+          find files -type f | sort
 
       - name: ⬇️ Download Packages
         run: |
@@ -172,7 +202,7 @@ jobs:
           name: OpenWrt 360 V6 (${{ env.BUILD_DATE }})
           body: |
             ## 📦 OpenWrt for 360 V6 (Qualcomm IPQ60xx)
-            - **版本**: OpenWrt 24.10 (Stable)
+            - **版本**: ImmortalWrt master (SNAPSHOT)
             - **构建时间**: ${{ env.BUILD_DATE }}
             - **源码 Commit**: ${{ env.OPENWRT_COMMIT }}
 
@@ -181,11 +211,14 @@ jobs:
             - ✅ HomeProxy + sing-box
             - ✅ ttyd 网页终端
             - ✅ USB 3.0 驱动 + ath11k 无线
-            - ✅ luci-app-opkg 软件包管理器
             - ✅ luci-app-fileassistant 文件管理器
             - ✅ luci-app-wol 网络唤醒
             - ✅ luci-app-autoreboot 定时重启
             - ✅ AdGuard Home 广告过滤
+
+            ### 📌 默认信息
+            - 管理地址：**http://192.168.2.1**
+            - 用户名：root，密码：无（首次登录请设置密码）
           files: ${{ env.FIRMWARE_PATH }}/*
           draft: false
           prerelease: false
@@ -203,3 +236,5 @@ jobs:
           find openwrt/bin -type f | sort
           echo "=== .config 中的设备确认 ==="
           grep "DEVICE\|TARGET_BOARD\|TARGET_SUBTARGET" openwrt/.config | grep -v "^#"
+          echo "=== files/ 目录预置内容 ==="
+          find openwrt/files -type f 2>/dev/null || echo "(files/ 目录不存在)"
