@@ -155,7 +155,7 @@ reboot
 
 - 固件基于 ImmortalWrt **master（SNAPSHOT）** 分支，为滚动更新版本，功能最新但非长期稳定版
 - 刷机前请备份原厂固件
-- Samba 共享性能受限于 USB 3.0 及 CPU，适合日常文件传输，不适合高并发读写
+- Samba 共享性能受限于 USB 2.0 及 CPU，适合日常文件传输，不适合高并发读写
 - SmartDNS 与 AdGuard Home 建议配合使用：SmartDNS 作为 AdGuard Home 的上游 DNS
 - IPv6 功能是否可用取决于运营商是否开通，开通前请联系运营商
 
