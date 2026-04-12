@@ -1,22 +1,5 @@
 # 📦 ImmortalWrt 360 V6 增强版 (Enhanced)
 
-基于 ImmortalWrt master 分支自动编译，专为 360 V6 路由器定制。
-
----
-
-## 硬件规格
-
-| 项目 | 参数 |
-|---|---|
-| 型号 | 360 V6 |
-| SoC | Qualcomm IPQ6010，四核 Cortex-A53 @ 1GHz |
-| RAM | 512MB |
-| Flash | 128MB NAND |
-| 无线 | AX1800，2.4G + 5G 双频 Wi-Fi 6 |
-| 有线 | 4 × 千兆 LAN + 1 × 千兆 WAN |
-| USB | USB 2.0 × 1 |
-
----
 
 ## 固件特性
 
