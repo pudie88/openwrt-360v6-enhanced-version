@@ -112,8 +112,7 @@ jobs:
             exit 1
           fi
 
-          # 7. ===== 预置 LAN IP 为 192.168.2.1 =====
-          # 通过 files/ 目录覆盖固件默认网络配置
+          # 7. 预置 LAN IP 为 192.168.2.1
           mkdir -p files/etc/config
           cat > files/etc/config/network << 'NETWORK_EOF'
           config interface 'loopback'
@@ -142,9 +141,19 @@ jobs:
           NETWORK_EOF
           echo "✅ LAN IP 已预置为 192.168.2.1"
 
-          # 8. 打印新增包的最终状态
-          echo "=== 新增包配置确认 ==="
-          grep -E "luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|luci-app-adguardhome|adguardhome" .config || true
+          # 8. 预置 BBR 开机生效
+          mkdir -p files/etc/sysctl.d
+          cat > files/etc/sysctl.d/99-bbr.conf << 'BBR_EOF'
+          net.core.default_qdisc=fq
+          net.ipv4.tcp_congestion_control=bbr
+          BBR_EOF
+          echo "✅ BBR sysctl 配置已预置"
+
+          # 9. 打印包配置确认
+          echo "=== 关键包配置确认 ==="
+          grep -E "luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|\
+          luci-app-adguardhome|adguardhome|luci-app-ddns|luci-app-upnp|\
+          luci-app-nlbwmon|luci-app-diskman|kmod-tcp-bbr|kmod-fs-ntfs3" .config || true
           echo "=== files/ 目录预置文件 ==="
           find files -type f | sort
 
@@ -206,19 +215,24 @@ jobs:
             - **构建时间**: ${{ env.BUILD_DATE }}
             - **源码 Commit**: ${{ env.OPENWRT_COMMIT }}
 
-            ### ✨ 已内置
+            ### ✨ 已内置功能
             - ✅ 中文界面 + Argon 主题
-            - ✅ HomeProxy + sing-box
+            - ✅ HomeProxy + sing-box 代理
             - ✅ ttyd 网页终端
             - ✅ USB 3.0 驱动 + ath11k 无线
-            - ✅ luci-app-fileassistant 文件管理器
-            - ✅ luci-app-wol 网络唤醒
-            - ✅ luci-app-autoreboot 定时重启
+            - ✅ USB 存储挂载 + ext4/NTFS3 + DiskMan
+            - ✅ 文件管理器 luci-app-fileassistant
+            - ✅ 网络唤醒 WOL
+            - ✅ 定时重启
             - ✅ AdGuard Home 广告过滤
+            - ✅ DDNS 动态域名（含 Cloudflare 脚本）
+            - ✅ UPnP 自动端口映射
+            - ✅ 流量监控 nlbwmon
+            - ✅ BBR 拥塞控制（开机自动生效）
 
             ### 📌 默认信息
             - 管理地址：**http://192.168.2.1**
-            - 用户名：root，密码：无（首次登录请设置密码）
+            - 用户名：root，密码：无（首次登录请立即设置密码）
           files: ${{ env.FIRMWARE_PATH }}/*
           draft: false
           prerelease: false
