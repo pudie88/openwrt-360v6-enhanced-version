@@ -88,22 +88,29 @@ jobs:
             echo "⚠️  luci-app-fileassistant 未在 feeds 中找到，将由 defconfig 自动跳过"
           fi
 
-          # 3. 清空 TARGET_DEVICES，只保留 qihoo_360v6
+          # 3. 检查 luci-app-crontabs
+          if find feeds -name "luci-app-crontabs" -maxdepth 4 -type d | grep -q .; then
+            echo "✅ luci-app-crontabs 已在 feeds 中找到"
+          else
+            echo "⚠️  luci-app-crontabs 未在 feeds 中找到，将由 defconfig 自动跳过"
+          fi
+
+          # 4. 清空 TARGET_DEVICES，只保留 qihoo_360v6
           MK="target/linux/qualcommax/image/ipq60xx.mk"
           sed -i '/^TARGET_DEVICES +=/d' "$MK"
           echo 'TARGET_DEVICES += qihoo_360v6' >> "$MK"
           echo "=== 修改后 TARGET_DEVICES ==="
           grep "TARGET_DEVICES" "$MK"
 
-          # 4. 复制配置 + 锁定设备
+          # 5. 复制配置 + 锁定设备
           cp "${GITHUB_WORKSPACE}/.config" .config
           sed -i '/CONFIG_TARGET_.*DEVICE.*/d' .config
           sed -i '1s/^/CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_qihoo_360v6=y\n/' .config
 
-          # 5. 展开配置
+          # 6. 展开配置
           make defconfig 2>&1 | tail -3
 
-          # 6. 校验设备锁定
+          # 7. 校验设备锁定
           if grep -q "^CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_qihoo_360v6=y" .config; then
             echo "✅ 设备锁定：qihoo_360v6"
           else
@@ -112,7 +119,7 @@ jobs:
             exit 1
           fi
 
-          # 7. 预置 LAN IP 为 192.168.2.1
+          # 8. 预置 LAN IP 为 192.168.2.1
           mkdir -p files/etc/config
           cat > files/etc/config/network << 'NETWORK_EOF'
           config interface 'loopback'
@@ -141,7 +148,7 @@ jobs:
           NETWORK_EOF
           echo "✅ LAN IP 已预置为 192.168.2.1"
 
-          # 8. 预置 BBR 开机生效
+          # 9. 预置 BBR 开机生效
           mkdir -p files/etc/sysctl.d
           cat > files/etc/sysctl.d/99-bbr.conf << 'BBR_EOF'
           net.core.default_qdisc=fq
@@ -149,11 +156,13 @@ jobs:
           BBR_EOF
           echo "✅ BBR sysctl 配置已预置"
 
-          # 9. 打印关键配置确认
+          # 10. 打印关键配置确认
           echo "=== 关键包配置确认 ==="
           grep -E "luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|\
           luci-app-adguardhome|adguardhome|luci-app-ddns|luci-app-upnp|\
-          luci-app-nlbwmon|luci-app-diskman|kmod-tcp-bbr|kmod-fs-ntfs3" .config || true
+          luci-app-nlbwmon|luci-app-diskman|kmod-tcp-bbr|kmod-fs-ntfs3|\
+          luci-app-samba4|smartmontools|luci-app-smartdns|luci-app-ipv6helper|\
+          luci-app-crontabs|automount" .config || true
           echo "=== files/ 目录预置文件 ==="
           find files -type f | sort
 
@@ -219,20 +228,27 @@ jobs:
             - ✅ 中文界面 + Argon 主题
             - ✅ HomeProxy + sing-box 代理
             - ✅ ttyd 网页终端
-            - ✅ USB 3.0 驱动 + ath11k 无线
-            - ✅ USB 存储挂载 + ext4/NTFS3 + DiskMan
-            - ✅ 文件管理器 luci-app-fileassistant
+            - ✅ ath11k 无线驱动（AX1800）
+            - ✅ USB 存储自动挂载 + ext4/NTFS3 + DiskMan
+            - ✅ USB 硬盘健康检测 smartmontools
+            - ✅ Samba4 文件共享（局域网 NAS）
+            - ✅ 文件管理器 fileassistant
             - ✅ 网络唤醒 WOL
-            - ✅ 定时重启
+            - ✅ 定时重启 + 计划任务界面
             - ✅ AdGuard Home 广告过滤
+            - ✅ SmartDNS 国内 DNS 加速
             - ✅ DDNS 动态域名（含 Cloudflare 脚本）
             - ✅ UPnP 自动端口映射
             - ✅ 流量监控 nlbwmon
+            - ✅ IPv6 支持（含 ipv6helper 一键配置）
             - ✅ BBR 拥塞控制（开机自动生效）
+            - ✅ 网络诊断工具 mtr / tcpdump
 
             ### 📌 默认信息
             - 管理地址：**http://192.168.2.1**
             - 用户名：root，密码：无（首次登录请立即设置密码）
+            - IPv6：已内置支持，需在 LuCI → 网络 → IPv6 Helper 中开启
+            - Samba：需在 LuCI → 服务 → 网络共享 中配置共享路径
           files: ${{ env.FIRMWARE_PATH }}/*
           draft: false
           prerelease: false
