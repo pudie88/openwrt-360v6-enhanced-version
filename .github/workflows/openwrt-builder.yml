@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/openwrt-builder.yml'
       - '.config'
+      - 'files/**'
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
