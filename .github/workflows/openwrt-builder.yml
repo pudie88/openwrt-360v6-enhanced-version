@@ -119,50 +119,25 @@ jobs:
             exit 1
           fi
 
-          # 8. 预置 LAN IP 为 192.168.2.1
+          # 8. 复制预置配置文件（文件直接存在仓库里，避免 YAML 格式问题）
           mkdir -p files/etc/config
-          cat > files/etc/config/network << 'NETWORK_EOF'
-          config interface 'loopback'
-                  option device 'lo'
-                  option proto 'static'
-                  option ipaddr '127.0.0.1'
-                  option netmask '255.0.0.0'
-
-          config globals 'globals'
-                  option ula_prefix 'auto'
-
-          config interface 'lan'
-                  option device 'br-lan'
-                  option proto 'static'
-                  option ipaddr '192.168.2.1'
-                  option netmask '255.255.255.0'
-                  option ip6assign '60'
-
-          config interface 'wan'
-                  option device 'eth1'
-                  option proto 'dhcp'
-
-          config interface 'wan6'
-                  option device 'eth1'
-                  option proto 'dhcpv6'
-          NETWORK_EOF
-          echo "✅ LAN IP 已预置为 192.168.2.1"
-
-          # 9. 预置 BBR 开机生效
           mkdir -p files/etc/sysctl.d
-          cat > files/etc/sysctl.d/99-bbr.conf << 'BBR_EOF'
-          net.core.default_qdisc=fq
-          net.ipv4.tcp_congestion_control=bbr
-          BBR_EOF
-          echo "✅ BBR sysctl 配置已预置"
+          cp "${GITHUB_WORKSPACE}/files/etc/config/network" files/etc/config/network
+          cp "${GITHUB_WORKSPACE}/files/etc/sysctl.d/99-bbr.conf" files/etc/sysctl.d/99-bbr.conf
+          echo "✅ 预置配置文件已复制"
+          echo "=== 校验 network 文件 ==="
+          cat files/etc/config/network
+          echo "=== 校验 bbr 文件 ==="
+          cat files/etc/sysctl.d/99-bbr.conf
 
-          # 10. 打印关键配置确认
+          # 9. 打印关键配置确认
           echo "=== 关键包配置确认 ==="
-          grep -E "luci-app-fileassistant|luci-app-wol|luci-app-autoreboot|\
-          luci-app-adguardhome|adguardhome|luci-app-ddns|luci-app-upnp|\
-          luci-app-nlbwmon|luci-app-diskman|kmod-tcp-bbr|kmod-fs-ntfs3|\
-          luci-app-samba4|smartmontools|luci-app-smartdns|luci-app-ipv6helper|\
-          luci-app-crontabs|automount" .config || true
+          grep -E "luci-app-fileassistant|luci-lua-runtime|luci-app-wol|\
+          luci-app-autoreboot|luci-app-adguardhome|adguardhome|\
+          luci-app-ddns|luci-app-upnp|luci-app-nlbwmon|\
+          luci-app-diskman|kmod-tcp-bbr|kmod-fs-ntfs3|\
+          luci-app-samba4|smartmontools|luci-app-smartdns|\
+          luci-app-ipv6helper|luci-app-crontabs|automount" .config || true
           echo "=== files/ 目录预置文件 ==="
           find files -type f | sort
 
