@@ -120,9 +120,13 @@ jobs:
           fi
 
           # 8. 复制预置配置文件
+          mkdir -p files/etc/config
           mkdir -p files/etc/sysctl.d
+          cp "${GITHUB_WORKSPACE}/files/etc/config/network" files/etc/config/network
           cp "${GITHUB_WORKSPACE}/files/etc/sysctl.d/99-bbr.conf" files/etc/sysctl.d/99-bbr.conf
-          echo "✅ BBR 配置已复制"
+          echo "✅ 预置配置文件已复制"
+          echo "=== 校验 network 文件 ==="
+          cat files/etc/config/network
           echo "=== 校验 bbr 文件 ==="
           cat files/etc/sysctl.d/99-bbr.conf
 
